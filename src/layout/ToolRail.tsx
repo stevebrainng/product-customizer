@@ -12,7 +12,7 @@ function RailButton({ tool }: { tool: ToolDef }) {
       aria-pressed={active}
       onClick={() => toggle(tool.id)}
       className={cn(
-        'flex h-[58px] w-[64px] flex-col items-center justify-center gap-1.5 rounded-xl border text-[11px] transition-colors',
+        'flex h-[58px] w-[64px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl border text-[11px] transition-colors',
         'focus-visible:border-accent-line focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/25',
         active
           ? 'border-line bg-surface shadow-sm'
@@ -36,10 +36,14 @@ export function ToolRail() {
   return (
     <nav
       aria-label="Design tools"
-      className="flex w-[76px] shrink-0 flex-col justify-between border-r border-line bg-canvas py-2"
+      className={cn(
+        'flex shrink-0 border-line bg-canvas',
+        'max-md:order-last max-md:w-full max-md:overflow-x-auto max-md:border-t max-md:px-1 max-md:py-1',
+        'md:w-[76px] md:flex-col md:justify-between md:border-r md:py-2',
+      )}
     >
-      <ul className="flex flex-col items-center gap-1">{group('top')}</ul>
-      <ul className="flex flex-col items-center gap-1">{group('bottom')}</ul>
+      <ul className="flex shrink-0 flex-row items-center gap-1 md:flex-col">{group('top')}</ul>
+      <ul className="flex shrink-0 flex-row items-center gap-1 md:flex-col">{group('bottom')}</ul>
     </nav>
   )
 }

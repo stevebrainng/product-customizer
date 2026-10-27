@@ -37,7 +37,7 @@ function ExportMenu() {
         }
       >
         <Download data-icon="inline-start" />
-        Export
+        <span className="max-sm:sr-only">Export</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[220px]">
         <DropdownMenuGroup>
@@ -70,11 +70,11 @@ export function TopBar() {
   const toggleRight = useDesigner((s) => s.toggleRightPanel)
 
   return (
-    <header className="flex h-[50px] shrink-0 items-center justify-between border-b border-border px-2">
+    <header className="flex h-[50px] shrink-0 items-center justify-between gap-2 overflow-x-auto border-b border-border px-2">
       <ButtonGroup aria-label="History">
-        <Button onClick={undo} disabled={!canUndo} className="px-3 font-normal">
+        <Button onClick={undo} disabled={!canUndo} className="px-3 font-normal" aria-label="Undo">
           <Undo2 data-icon="inline-start" />
-          Undo
+          <span className="max-sm:sr-only">Undo</span>
         </Button>
         <IconButton icon={Redo2} label="Redo" onClick={redo} disabled={!canRedo} />
       </ButtonGroup>

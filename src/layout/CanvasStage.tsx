@@ -60,7 +60,7 @@ export function CanvasStage() {
 
   return (
     <main className="relative min-w-0 flex-1 overflow-hidden bg-muted">
-      <div ref={scrollerRef} className="absolute inset-0 flex overflow-auto px-6 pb-[76px] pt-6">
+      <div ref={scrollerRef} className="absolute inset-0 flex overflow-auto px-3 pt-3 pb-36 sm:px-6 sm:pt-6 md:pb-[76px]">
         <CanvasDropTarget stageRef={stageRef} scale={scale} className="m-auto shrink-0">
           <EditorStage scale={scale} />
         </CanvasDropTarget>
@@ -73,7 +73,7 @@ export function CanvasStage() {
         options={SIDES}
         value={side}
         onChange={setSide}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2"
+        className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 lg:bottom-4"
       />
     </main>
   )

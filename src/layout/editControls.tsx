@@ -6,8 +6,18 @@ export function EditBar({ label, children }: { label: string; children: ReactNod
     <div
       role="toolbar"
       aria-label={label}
-      className="pointer-events-auto absolute left-1/2 top-4 z-20 flex max-w-[min(960px,calc(100%-8rem))] -translate-x-1/2 flex-wrap items-center justify-center gap-1 rounded-xl border border-border bg-card/95 p-1.5 shadow-md backdrop-blur"
-      onMouseDown={(e) => e.preventDefault()}
+      className={cn(
+        'pointer-events-auto absolute z-20 flex flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain rounded-xl border border-border bg-card/95 p-1.5 shadow-md backdrop-blur [&>*]:shrink-0',
+        // Phone: one scrolling row above the side switch, so the product stays visible.
+        'inset-x-2 bottom-[4.25rem]',
+        // Wider screens: the same single row across the top. It scrolls instead of stacking over the product.
+        'md:inset-x-auto md:bottom-auto md:left-1/2 md:top-3 md:max-w-[min(960px,calc(100%-1.5rem))] md:-translate-x-1/2',
+      )}
+      onMouseDown={(e) => {
+        const target = e.target as HTMLElement
+        if (target.closest('input, textarea, select, [role="combobox"]')) return
+        e.preventDefault()
+      }}
     >
       {children}
     </div>

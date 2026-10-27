@@ -16,7 +16,13 @@ export function DesignerProvider({
   initialState?: Partial<DesignerState>
 }) {
   const storeRef = useRef<DesignerStore | null>(null)
-  if (!storeRef.current) storeRef.current = createDesignerStore(initialState)
+  if (!storeRef.current) {
+    const narrow = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+    storeRef.current = createDesignerStore({
+      ...(narrow ? { rightPanelOpen: false } : {}),
+      ...initialState,
+    })
+  }
   return <DesignerContext.Provider value={storeRef.current}>{children}</DesignerContext.Provider>
 }
 

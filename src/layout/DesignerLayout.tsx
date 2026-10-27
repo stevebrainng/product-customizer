@@ -10,7 +10,7 @@ export function DesignerLayout() {
     <CanvasDnd>
       <div className="flex h-full flex-col bg-canvas">
         <TopBar />
-        <div className="flex min-h-0 flex-1">
+        <div className="relative flex min-h-0 flex-1 flex-col md:flex-row">
           <ToolRail />
           <SidePanel />
           <CanvasStage />

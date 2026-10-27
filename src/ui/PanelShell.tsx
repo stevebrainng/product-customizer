@@ -11,8 +11,11 @@ export function PanelShell({
     <aside
       aria-label={title}
       className={cn(
-        'flex w-[300px] shrink-0 flex-col border-line bg-canvas',
-        edge === 'left' ? 'border-r' : 'border-l',
+        'flex flex-col border-line bg-canvas',
+        // Phone: a sheet over the canvas, so the product keeps the width of the screen.
+        'max-md:absolute max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:h-[min(68vh,560px)] max-md:w-full max-md:rounded-t-2xl max-md:border max-md:shadow-xl',
+        'md:w-[300px] md:shrink-0',
+        edge === 'left' ? 'md:border-r' : 'md:border-l',
       )}
     >
       <header className="flex h-[58px] shrink-0 items-center justify-between px-3 pl-4">
