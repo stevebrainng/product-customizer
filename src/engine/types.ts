@@ -36,15 +36,36 @@ export interface PolygonNode extends NodeBase {
 export interface LineNode extends NodeBase {
   type: 'line'; length: number; stroke: string; strokeWidth: number
 }
+/** Konva.Text textDecoration: one value, or none. */
+export type TextDecoration = '' | 'underline' | 'line-through'
+
 export interface TextNode extends NodeBase {
   type: 'text'; text: string; fontSize: number; fontFamily: string
   fontStyle: string; fill: string; align: 'left' | 'center' | 'right'; width?: number
+  /** Multiplier on font size. Konva default is 1. */
+  lineHeight?: number
+  /** Extra pixels between characters. */
+  letterSpacing?: number
+  textDecoration?: TextDecoration
+  stroke?: string
+  strokeWidth?: number
+  shadowBlur?: number
+  shadowColor?: string
+  /** 0–1. Used only when shadowBlur is greater than 0. */
+  shadowOpacity?: number
 }
+
+/** Konva.Filters applied to an image. `none` skips cache(). */
+export type ImageFilter = 'none' | 'grayscale' | 'sepia' | 'invert' | 'blur' | 'brighten' | 'contrast'
+
 export interface ImageNode extends NodeBase {
   type: 'image'
   /** Reference into the asset registry. Image data never lives in the document or history. */
   assetId: string
   width: number; height: number
+  filter?: ImageFilter
+  /** blur radius, brightness multiplier, or contrast amount — meaning depends on `filter`. */
+  filterAmount?: number
 }
 
 export type DesignNode = RectNode | EllipseNode | PolygonNode | LineNode | TextNode | ImageNode

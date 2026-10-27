@@ -10,6 +10,7 @@ import { useEditor } from '../provider/EditorProvider'
 export function ProductMockup({ side }: { side: SideId }) {
   const product = useEditor(selectProduct)
   const colorId = useEditor((s) => s.variant.colorId)
+  if (!product) return null
   const { image, tintable } = resolveSide(product, side)
   const color = product.colors.find((c) => c.id === colorId)
   if (!image) return null

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, Type } from 'lucide-react'
+import { LibraryDrag } from '@/dnd/LibraryDrag'
+import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, Strikethrough, Type, Underline } from 'lucide-react'
 import { FONTS, DEFAULT_FONT_FAMILY, findFont, fontLoadSpecs, cssFontFamily } from '@/config/fonts'
 import { TEXT_PRESETS } from '@/data/presets'
 import { TEXT_TOTAL } from '@/data/catalog'
@@ -7,6 +8,7 @@ import {
   selectActiveNodes,
   useEditor,
   useEditorRuntime,
+  type TextDecoration,
   type TextNode,
 } from '@/engine'
 import { SearchInput } from '@/ui/SearchInput'
@@ -78,6 +80,20 @@ function StyleToggles({ node }: { node: TextNode }) {
           <AlignRight />
         </ToggleGroupItem>
       </ToggleGroup>
+      <ToggleGroup
+        variant="outline"
+        spacing={0}
+        value={node.textDecoration ? [node.textDecoration] : []}
+        onValueChange={(next) => updateNode(node.id, { textDecoration: (next[0] as TextDecoration | undefined) ?? '' })}
+        aria-label="Text decoration"
+      >
+        <ToggleGroupItem value="underline" aria-label="Underline">
+          <Underline />
+        </ToggleGroupItem>
+        <ToggleGroupItem value="line-through" aria-label="Strikethrough">
+          <Strikethrough />
+        </ToggleGroupItem>
+      </ToggleGroup>
     </div>
   )
 }
@@ -138,6 +154,40 @@ function SelectedTextControls({ node }: { node: TextNode }) {
         </select>
       </Field>
       <StyleToggles node={node} />
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="Letter spacing">
+          <NumberInput
+            value={node.letterSpacing ?? 0}
+            min={-20}
+            max={80}
+            onChange={(letterSpacing) => updateNode(node.id, { letterSpacing })}
+          />
+        </Field>
+        <Field label="Line height">
+          <NumberInput
+            value={Math.round((node.lineHeight ?? 1.15) * 100)}
+            min={60}
+            max={300}
+            onChange={(hundredths) => updateNode(node.id, { lineHeight: hundredths / 100 })}
+          />
+        </Field>
+        <Field label="Stroke">
+          <NumberInput
+            value={node.strokeWidth ?? 0}
+            min={0}
+            max={20}
+            onChange={(strokeWidth) => updateNode(node.id, { strokeWidth })}
+          />
+        </Field>
+        <Field label="Shadow">
+          <NumberInput
+            value={node.shadowBlur ?? 0}
+            min={0}
+            max={40}
+            onChange={(shadowBlur) => updateNode(node.id, { shadowBlur })}
+          />
+        </Field>
+      </div>
     </PanelSection>
   )
 }
@@ -183,51 +233,92 @@ export function TextPanel() {
 
       <PanelSection title="Add text" total={TEXT_TOTAL}>
         <div className="grid gap-2">
-          <Button
-            className="h-11 justify-start px-3 text-[15px] font-extrabold tracking-tight"
-            onClick={() => addText(TEXT_PRESETS.title.overrides as Partial<TextNode>)}
+          <LibraryDrag
+            id="text-title"
+            data={{ kind: 'preset', preset: TEXT_PRESETS.title, edit: true, preview: { label: 'Title' } }}
           >
-            Add a title
-          </Button>
-          <Button
-            className="h-10 justify-start px-3 text-[14px] font-medium"
-            onClick={() => addText({ text: 'Subtitle', fontSize: 36, fontStyle: 'normal' })}
+            <Button
+              className="h-11 w-full justify-start px-3 text-[15px] font-extrabold tracking-tight"
+              onClick={() => addText(TEXT_PRESETS.title.overrides as Partial<TextNode>)}
+            >
+              Add a title
+            </Button>
+          </LibraryDrag>
+          <LibraryDrag
+            id="text-subtitle"
+            data={{
+              kind: 'preset',
+              edit: true,
+              preset: { type: 'text', overrides: { text: 'Subtitle', fontSize: 36, fontStyle: 'normal' } },
+              preview: { label: 'Subtitle' },
+            }}
           >
-            Add a subtitle
-          </Button>
-          <Button
-            className="h-9 justify-start px-3 text-[13px] font-normal"
-            onClick={() => addText({ text: 'Body text', fontSize: 24, fontStyle: 'normal', align: 'left' })}
+            <Button
+              className="h-10 w-full justify-start px-3 text-[14px] font-medium"
+              onClick={() => addText({ text: 'Subtitle', fontSize: 36, fontStyle: 'normal' })}
+            >
+              Add a subtitle
+            </Button>
+          </LibraryDrag>
+          <LibraryDrag
+            id="text-body"
+            data={{
+              kind: 'preset',
+              edit: true,
+              preset: { type: 'text', overrides: { text: 'Body text', fontSize: 24, fontStyle: 'normal', align: 'left' } },
+              preview: { label: 'Body' },
+            }}
           >
-            Add body text
-          </Button>
+            <Button
+              className="h-9 w-full justify-start px-3 text-[13px] font-normal"
+              onClick={() => addText({ text: 'Body text', fontSize: 24, fontStyle: 'normal', align: 'left' })}
+            >
+              Add body text
+            </Button>
+          </LibraryDrag>
         </div>
         <ScrollRow>
-          <Tile aria-label="Add title text" onClick={() => addText(TEXT_PRESETS.title.overrides as Partial<TextNode>)}>
-            <span className="text-[19px] font-extrabold tracking-tight">TITLE</span>
-          </Tile>
-          <Tile aria-label="Add fashion text" onClick={() => addText(TEXT_PRESETS.fashion.overrides as Partial<TextNode>)}>
-            <span className="rounded-sm bg-emerald-50 px-1 text-[14px] font-light tracking-wide text-emerald-900">
-              FASHION
-            </span>
-          </Tile>
-          <Tile aria-label="Add boxed text" onClick={() => addText(TEXT_PRESETS.box.overrides as Partial<TextNode>)}>
-            <span className="w-[71px] bg-blue-200 px-1 py-1.5 text-center text-[7px] font-bold leading-[1.15] text-blue-950">
-              Text in a box. Not message in a bottle.
-            </span>
-          </Tile>
+          <LibraryDrag id="text-tile-title" className="shrink-0" data={{ kind: 'preset', preset: TEXT_PRESETS.title, edit: true, preview: { label: 'TITLE' } }}>
+            <Tile aria-label="Add title text" onClick={() => addText(TEXT_PRESETS.title.overrides as Partial<TextNode>)}>
+              <span className="text-[19px] font-extrabold tracking-tight">TITLE</span>
+            </Tile>
+          </LibraryDrag>
+          <LibraryDrag id="text-tile-fashion" className="shrink-0" data={{ kind: 'preset', preset: TEXT_PRESETS.fashion, edit: true, preview: { label: 'FASHION' } }}>
+            <Tile aria-label="Add fashion text" onClick={() => addText(TEXT_PRESETS.fashion.overrides as Partial<TextNode>)}>
+              <span className="rounded-sm bg-emerald-50 px-1 text-[14px] font-light tracking-wide text-emerald-900">
+                FASHION
+              </span>
+            </Tile>
+          </LibraryDrag>
+          <LibraryDrag id="text-tile-box" className="shrink-0" data={{ kind: 'preset', preset: TEXT_PRESETS.box, edit: true, preview: { label: 'Box' } }}>
+            <Tile aria-label="Add boxed text" onClick={() => addText(TEXT_PRESETS.box.overrides as Partial<TextNode>)}>
+              <span className="w-[71px] bg-blue-200 px-1 py-1.5 text-center text-[7px] font-bold leading-[1.15] text-blue-950">
+                Text in a box. Not message in a bottle.
+              </span>
+            </Tile>
+          </LibraryDrag>
         </ScrollRow>
       </PanelSection>
 
       <PanelSection title="Fonts">
         <div className="grid gap-1.5">
           {fonts.map((f) => (
-            <button
+            <LibraryDrag
               key={f.id}
+              id={`font-${f.id}`}
+              className="w-full"
+              data={{
+                kind: 'preset',
+                edit: true,
+                preset: { type: 'text', overrides: { text: 'Your text', fontFamily: f.family, fontStyle: 'bold' } },
+                preview: { label: f.label },
+              }}
+            >
+            <button
               type="button"
               onClick={() => applyFontToSelectionOrAdd(f.family)}
               className={cn(
-                'flex h-11 items-center rounded-lg border border-line bg-surface px-3 text-left text-[18px] transition-colors',
+                'flex h-11 w-full items-center rounded-lg border border-line bg-surface px-3 text-left text-[18px] transition-colors',
                 'hover:border-accent-line hover:bg-accent-soft/40',
                 selected && findFont(selected.fontFamily)?.id === f.id && 'border-accent-line bg-accent-soft text-primary',
               )}
@@ -236,6 +327,7 @@ export function TextPanel() {
               <span className="min-w-0 flex-1 truncate">{f.label}</span>
               <span className="ml-2 text-[11px] font-sans capitalize text-muted-foreground">{f.category}</span>
             </button>
+            </LibraryDrag>
           ))}
           {fonts.length === 0 && (
             <p className="py-6 text-center text-[13px] text-muted-foreground">No fonts match “{query}”</p>

@@ -7,6 +7,7 @@ import {
 import { SIZE_PRESETS } from '@/config/products'
 import { Button } from '@/ui/Button'
 import { Chip } from '@/ui/Chip'
+import { EmptyState } from '@/ui/EmptyState'
 import { Field, TextInput } from '@/ui/Field'
 import { PanelSection } from '@/ui/PanelSection'
 import {
@@ -35,6 +36,7 @@ function ImageSlot({ side, label }: { side: SideId; label: string }) {
   const product = useEditor(selectProduct)
   const updateProduct = useEditor((s) => s.updateProduct)
   const updateSide = useEditor((s) => s.updateSide)
+  if (!product) return null
   const cfg = product.sides[side]
   const shown = cfg.image ?? product.sides.front.image
 
@@ -108,9 +110,10 @@ function PrintAreaSection() {
   const editing = useEditor((s) => s.editingPrintArea)
   const setEditing = useEditor((s) => s.setEditingPrintArea)
   const updateSide = useEditor((s) => s.updateSide)
+  const [open, setOpen] = useState(false)
+  if (!product) return null
   const area = product.sides[side].printArea
   const set = (patch: Partial<typeof area>) => updateSide(side, { printArea: clampRect({ ...area, ...patch }, product.world) })
-  const [open, setOpen] = useState(false)
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -153,6 +156,7 @@ function ColorSection() {
   const setColor = useEditor((s) => s.setColor)
   const updateProduct = useEditor((s) => s.updateProduct)
   const [draft, setDraft] = useState('#4f46e5')
+  if (!product) return null
 
   const tintable = product.sides[side].image ? product.sides[side].tintable : product.sides.front.tintable
   const selected = product.colors.find((c) => c.id === colorId)
@@ -214,6 +218,7 @@ function SizeSection() {
   const setSize = useEditor((s) => s.setSize)
   const updateProduct = useEditor((s) => s.updateProduct)
   const [editing, setEditing] = useState(false)
+  if (!product) return null
 
   const toggle = (sz: string) =>
     updateProduct({
@@ -264,8 +269,23 @@ export function ProductPanel() {
     if (img) addProduct(createProductFromImage(`Product ${list.length + 1}`, img))
   }
 
+  if (!product || !productId) {
+    return (
+      <div className="flex flex-col gap-4 pt-4">
+        <EmptyState title="No product yet">
+          <p className="max-w-[220px] text-[12px] text-muted-foreground">
+            Upload a product photo to set the canvas and start designing.
+          </p>
+          <Button className="w-full" onClick={upload}>
+            <Upload data-icon="inline-start" /> Upload product photo
+          </Button>
+        </EmptyState>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <PanelSection title="Product">
         <div className="flex gap-2">
           <Select value={productId} onValueChange={(id) => id && setProduct(id)}>
@@ -282,11 +302,17 @@ export function ProductPanel() {
               </SelectGroup>
             </SelectContent>
           </Select>
-          <Button size="icon-lg" aria-label="Delete product" disabled={list.length < 2} onClick={() => removeProduct(productId)}>
+          <Button
+            size="icon-lg"
+            aria-label="Delete product"
+            onClick={() => removeProduct(productId)}
+          >
             <Trash2 />
           </Button>
         </div>
-        <Button className="w-full" onClick={upload}><Upload data-icon="inline-start" /> Upload product photo</Button>
+        <Button className="w-full" onClick={upload}>
+          <Upload data-icon="inline-start" /> Upload product photo
+        </Button>
         <Field label="Name">
           <TextInput value={product.name} onChange={(e) => updateProduct({ name: e.target.value })} />
         </Field>

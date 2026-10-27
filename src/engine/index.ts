@@ -2,11 +2,13 @@
 export * from './types'
 export { EditorProvider, useEditor, useEditorStore, useEditorRuntime } from './provider/EditorProvider'
 export {
-  selectActiveNodes, selectProduct, selectCanUndo, selectCanRedo, ZOOM_STEPS, type Zoom,
+  selectActiveNodes, selectProduct, selectHasProduct, selectCanExport, selectCanUndo, selectCanRedo, ZOOM_STEPS, type Zoom,
 } from './store/editorStore'
 export { EditorStage } from './canvas/EditorStage'
 export { useAssetUpload } from './hooks/useAssetUpload'
 export { useElementSize, resolveScale } from './hooks/useStageViewport'
+export { useCanvasZoom, clampZoom, ZOOM_MIN, ZOOM_MAX } from './hooks/useCanvasZoom'
+export { PRINT_DPI, PRINT_WIDTH_IN, printSize } from './print'
 export { registerNode, defineNode, getNodeDefinition, createId } from './nodes'
 export {
   resolveSide, createProductFromImage, pickProductImage, readProductImage, worldFor, clampRect,

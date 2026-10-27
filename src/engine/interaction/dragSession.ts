@@ -40,7 +40,9 @@ export function moveDrag(store: EditorStore, target: Konva.Node, snapDisabled: b
   if (snapDisabled) {
     s.setGuides(NO_GUIDES)
   } else {
-    const { printArea } = selectProduct(s).sides[s.activeSide]
+    const product = selectProduct(s)
+    if (!product) return
+    const { printArea } = product.sides[s.activeSide]
     const { dx, dy, guides } = computeSnap(target, sess.exclude, printArea, 6 / stage.scaleX())
     target.position({ x: target.x() + dx, y: target.y() + dy })
     s.setGuides(guides)

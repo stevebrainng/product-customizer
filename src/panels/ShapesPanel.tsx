@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { LibraryDrag } from '@/dnd/LibraryDrag'
 import { SHAPE_CATALOG, SHAPE_CATEGORIES } from '@/data/shapes'
 import { LibraryGrid } from '@/ui/LibraryGrid'
 import { SearchInput } from '@/ui/SearchInput'
@@ -35,9 +36,15 @@ export function ShapesPanel() {
       {shapes.length > 0 ? (
         <LibraryGrid>
           {shapes.map((s) => (
-            <PresetTile key={s.id} label={`Add ${s.label}`} onPlace={() => place(s.preset)}>
-              <ShapeGlyph kind={s.kind} />
-            </PresetTile>
+            <LibraryDrag
+              key={s.id}
+              id={`shape-${s.id}`}
+              data={{ kind: 'preset', preset: s.preset, preview: { label: s.label } }}
+            >
+              <PresetTile label={`Add ${s.label}`} onPlace={() => place(s.preset)}>
+                <ShapeGlyph kind={s.kind} />
+              </PresetTile>
+            </LibraryDrag>
           ))}
         </LibraryGrid>
       ) : (

@@ -46,6 +46,8 @@ export function EditorStage({ scale, className }: { scale: number; className?: s
     void runtime.ensureFonts(FONTS.flatMap((f) => fontLoadSpecs(f.family, 48)))
   }, [runtime])
 
+  if (!product) return null
+
   const { world } = product
   const pa = product.sides[side].printArea
 

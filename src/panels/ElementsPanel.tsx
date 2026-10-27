@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { LibraryDrag } from '@/dnd/LibraryDrag'
 import { FEATURED_STICKERS } from '@/data/stickers'
 import { SHAPE_CATALOG } from '@/data/shapes'
 import { TEXT_PRESETS } from '@/data/presets'
@@ -47,9 +48,14 @@ export function ElementsPanel() {
         <PanelSection title="Images" onMore={() => openTool('images')}>
           <ScrollRow>
             {photos.map((photo) => (
-              <div key={photo.id} className="w-[87px] shrink-0">
+              <LibraryDrag
+                key={photo.id}
+                id={`element-photo-${photo.id}`}
+                className="w-[87px] shrink-0"
+                data={{ kind: 'photo', photo, preview: { label: photo.photographer.name, imageUrl: photo.thumbUrl } }}
+              >
                 <PhotoTile photo={photo} onPlace={() => placePhoto(photo)} />
-              </div>
+              </LibraryDrag>
             ))}
           </ScrollRow>
         </PanelSection>
@@ -63,7 +69,13 @@ export function ElementsPanel() {
         >
           <ScrollRow>
             {texts.map((t) => (
-              <Tile key={t.id} aria-label={`Add ${t.label}`} onClick={() => place(t.node, { edit: true })}>
+              <LibraryDrag
+                key={t.id}
+                id={`element-text-${t.id}`}
+                className="shrink-0"
+                data={{ kind: 'preset', preset: t.node, edit: true, preview: { label: t.label } }}
+              >
+              <Tile aria-label={`Add ${t.label}`} onClick={() => place(t.node, { edit: true })}>
                 {t.id === 'title' && <span className="text-[19px] font-extrabold tracking-tight">TITLE</span>}
                 {t.id === 'fashion' && (
                   <span className="rounded-sm bg-emerald-50 px-1 text-[14px] font-light tracking-wide text-emerald-900">
@@ -76,6 +88,7 @@ export function ElementsPanel() {
                   </span>
                 )}
               </Tile>
+              </LibraryDrag>
             ))}
           </ScrollRow>
         </PanelSection>
@@ -89,9 +102,16 @@ export function ElementsPanel() {
         >
           <ScrollRow>
             {shapes.map((s) => (
-              <Tile key={s.id} size="sm" aria-label={`Add ${s.label}`} onClick={() => place(s.preset)}>
-                <ShapeGlyph kind={s.kind} />
-              </Tile>
+              <LibraryDrag
+                key={s.id}
+                id={`element-shape-${s.id}`}
+                className="shrink-0"
+                data={{ kind: 'preset', preset: s.preset, preview: { label: s.label } }}
+              >
+                <Tile size="sm" aria-label={`Add ${s.label}`} onClick={() => place(s.preset)}>
+                  <ShapeGlyph kind={s.kind} />
+                </Tile>
+              </LibraryDrag>
             ))}
           </ScrollRow>
         </PanelSection>
@@ -105,9 +125,16 @@ export function ElementsPanel() {
         >
           <ScrollRow>
             {stickers.map((s) => (
-              <Tile key={s.id} size="sm" aria-label={`Add ${s.emoji}`} onClick={() => place(s.preset)}>
-                <span className="text-[34px] leading-none">{s.emoji}</span>
-              </Tile>
+              <LibraryDrag
+                key={s.id}
+                id={`element-sticker-${s.id}`}
+                className="shrink-0"
+                data={{ kind: 'preset', preset: s.preset, preview: { label: s.emoji, emoji: s.emoji } }}
+              >
+                <Tile size="sm" aria-label={`Add ${s.emoji}`} onClick={() => place(s.preset)}>
+                  <span className="text-[34px] leading-none">{s.emoji}</span>
+                </Tile>
+              </LibraryDrag>
             ))}
           </ScrollRow>
         </PanelSection>

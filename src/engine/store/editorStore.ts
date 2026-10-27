@@ -1,8 +1,9 @@
 import { createStore } from 'zustand/vanilla'
 import type {
-  Asset, DesignDoc, DesignNode, Guides, NodeType, ProductSpec, SideConfig, SideId, Variant,
+  Asset, DesignDoc, DesignNode, Guides, NodeType, Point, ProductSpec, SideConfig, SideId, Variant,
 } from '../types'
 import { createId, createNode } from '../nodes'
+import { clampZoom } from '../zoom'
 import { defaultVariant } from '../product'
 import { createHistory, pushHistory, redoHistory, undoHistory, type History } from './history'
 
@@ -16,7 +17,8 @@ export interface NodePatch { id: string; patch: Partial<DesignNode> }
 export interface EditorState {
   // product catalog (data) and the active product
   products: Record<string, ProductSpec>
-  productId: string
+  /** Null until the user uploads / selects a product. */
+  productId: string | null
   /** Parked documents of products that are not active, so switching never loses work. */
   histories: Record<string, History<DesignDoc>>
   variant: Variant
@@ -47,8 +49,8 @@ export interface EditorState {
   toggleSelect: (id: string) => void
   clearSelection: () => void
 
-  addNode: (type: NodeType, overrides?: Partial<DesignNode>) => string
-  addImageNode: (assetId: string) => string | null
+  addNode: (type: NodeType, overrides?: Partial<DesignNode>, at?: Point) => string
+  addImageNode: (assetId: string, at?: Point) => string | null
   addAsset: (asset: Asset) => void
   updateNode: (id: string, patch: Partial<DesignNode>) => void
   /** Batch update: one history entry for many nodes. */
@@ -57,6 +59,8 @@ export interface EditorState {
   duplicateSelected: () => void
   nudgeSelected: (dx: number, dy: number) => void
   reorderSelected: (dir: ReorderDirection) => void
+  /** `ids` are front-to-back, matching the Layers list. */
+  setLayerOrder: (ids: string[]) => void
 
   startEditing: (id: string) => void
   stopEditing: () => void
@@ -70,8 +74,12 @@ export interface EditorState {
   zoomOut: () => void
 }
 
-export const selectProduct = (s: EditorState) => s.products[s.productId]
+export const selectProduct = (s: EditorState): ProductSpec | undefined =>
+  s.productId ? s.products[s.productId] : undefined
+export const selectHasProduct = (s: EditorState) => Boolean(s.productId && s.products[s.productId])
 export const selectActiveNodes = (s: EditorState) => s.history.present.sides[s.activeSide]
+/** A product photo alone is not a design. Export needs at least one layer on the active side. */
+export const selectCanExport = (s: EditorState) => selectHasProduct(s) && selectActiveNodes(s).length > 0
 export const selectCanUndo = (s: EditorState) => s.history.past.length > 0
 export const selectCanRedo = (s: EditorState) => s.history.future.length > 0
 
@@ -106,8 +114,7 @@ function fixVariant(product: ProductSpec, v: Variant): Variant {
 }
 
 /** Store factory: one store per <EditorProvider>, so tests and multi-editor pages stay isolated. */
-export const createEditorStore = (initialProducts: ProductSpec[]) => {
-  if (!initialProducts.length) throw new Error('createEditorStore needs at least one product')
+export const createEditorStore = (initialProducts: ProductSpec[] = []) => {
   const first = initialProducts[0]
 
   return createStore<EditorState>()((set, get) => {
@@ -134,15 +141,29 @@ export const createEditorStore = (initialProducts: ProductSpec[]) => {
 
     const patchProduct = (fn: (p: ProductSpec) => ProductSpec) =>
       set((s) => {
-        const next = fn(s.products[s.productId])
+        if (!s.productId) return s
+        const current = s.products[s.productId]
+        if (!current) return s
+        const next = fn(current)
         return { products: { ...s.products, [s.productId]: next }, variant: fixVariant(next, s.variant) }
       })
 
+    const clearActiveProduct = () => ({
+      productId: null as string | null,
+      history: createHistory<DesignDoc>(emptyDoc()),
+      variant: { colorId: null, size: null } as Variant,
+      selection: [] as string[],
+      activeSide: 'front' as SideId,
+      guides: NO_GUIDES,
+      editingTextId: null,
+      editingPrintArea: false,
+    })
+
     return {
       products: Object.fromEntries(initialProducts.map((p) => [p.id, p])),
-      productId: first.id,
+      productId: first?.id ?? null,
       histories: {},
-      variant: defaultVariant(first),
+      variant: first ? defaultVariant(first) : { colorId: null, size: null },
       history: createHistory<DesignDoc>(emptyDoc()),
       assets: {},
       selection: [],
@@ -160,8 +181,11 @@ export const createEditorStore = (initialProducts: ProductSpec[]) => {
         set((s) => {
           const product = s.products[id]
           if (!product || id === s.productId) return s
+          const histories = s.productId
+            ? { ...s.histories, [s.productId]: s.history }
+            : s.histories
           return {
-            histories: { ...s.histories, [s.productId]: s.history },
+            histories,
             productId: id,
             history: s.histories[id] ?? createHistory<DesignDoc>(emptyDoc()),
             variant: defaultVariant(product),
@@ -174,14 +198,17 @@ export const createEditorStore = (initialProducts: ProductSpec[]) => {
         }),
       removeProduct: (id) => {
         const s = get()
+        if (!s.products[id]) return
         const ids = Object.keys(s.products)
-        if (ids.length < 2 || !s.products[id]) return
+        const remaining = Object.fromEntries(Object.entries(s.products).filter(([k]) => k !== id))
+        const histories = Object.fromEntries(Object.entries(s.histories).filter(([k]) => k !== id))
+        if (ids.length === 1) {
+          set({ products: remaining, histories, ...clearActiveProduct() })
+          return
+        }
         const fallback = ids.find((x) => x !== id)!
         if (id === s.productId) get().setProduct(fallback)
-        set((st) => ({
-          products: Object.fromEntries(Object.entries(st.products).filter(([k]) => k !== id)),
-          histories: Object.fromEntries(Object.entries(st.histories).filter(([k]) => k !== id)),
-        }))
+        set({ products: remaining, histories })
       },
       updateProduct: (patch) => patchProduct((p) => ({ ...p, ...patch })),
       updateSide: (side, patch) =>
@@ -202,21 +229,25 @@ export const createEditorStore = (initialProducts: ProductSpec[]) => {
         })),
       clearSelection: () => set((s) => (s.selection.length ? { selection: [] } : s)),
 
-      addNode: (type, overrides) => {
+      addNode: (type, overrides, at) => {
         const s = get()
-        const pa = selectProduct(s).sides[s.activeSide].printArea
+        const product = selectProduct(s)
+        if (!product) return ''
+        const pa = product.sides[s.activeSide].printArea
         const cascade = (sideNodes().length % 6) * 14
-        const node = createNode(type, { x: pa.x + pa.width / 2 + cascade, y: pa.y + pa.height / 2 + cascade }, overrides)
+        const center = at ?? { x: pa.x + pa.width / 2 + cascade, y: pa.y + pa.height / 2 + cascade }
+        const node = createNode(type, center, overrides)
         commitNodes((nodes) => [...nodes, node], [node.id])
         return node.id
       },
-      addImageNode: (assetId) => {
+      addImageNode: (assetId, at) => {
         const s = get()
+        const product = selectProduct(s)
         const asset = s.assets[assetId]
-        if (!asset) return null
-        const pa = selectProduct(s).sides[s.activeSide].printArea
+        if (!product || !asset) return null
+        const pa = product.sides[s.activeSide].printArea
         const k = Math.min((pa.width * 0.7) / asset.width, (pa.height * 0.7) / asset.height)
-        return get().addNode('image', { assetId, width: asset.width * k, height: asset.height * k })
+        return get().addNode('image', { assetId, width: asset.width * k, height: asset.height * k }, at)
       },
       addAsset: (asset) => set((s) => ({ assets: { ...s.assets, [asset.id]: asset } })),
 
@@ -255,6 +286,16 @@ export const createEditorStore = (initialProducts: ProductSpec[]) => {
         const ids = get().selection
         if (ids.length) commitNodes((nodes) => reorder(nodes, ids, dir))
       },
+      setLayerOrder: (ids) =>
+        commitNodes((nodes) => {
+          if (ids.length !== nodes.length) return nodes
+          const byId = new Map(nodes.map((n) => [n.id, n]))
+          const next = [...ids].reverse().map((id) => byId.get(id))
+          if (next.some((n) => !n)) return nodes
+          const ordered = next as DesignNode[]
+          if (ordered.every((n, i) => n.id === nodes[i].id)) return nodes
+          return ordered
+        }),
 
       startEditing: (id) => {
         const node = sideNodes().find((n) => n.id === id)
@@ -279,12 +320,14 @@ export const createEditorStore = (initialProducts: ProductSpec[]) => {
 
       setZoom: (zoom) => set({ zoom }),
       zoomIn: () => {
-        const next = ZOOM_STEPS.find((z) => z > zoomValue(get().zoom) + 0.001)
-        set({ zoom: next ?? ZOOM_STEPS[ZOOM_STEPS.length - 1] })
+        const current = zoomValue(get().zoom)
+        const next = ZOOM_STEPS.find((z) => z > current + 0.001)
+        set({ zoom: next ?? clampZoom(current * 1.25) })
       },
       zoomOut: () => {
-        const prev = [...ZOOM_STEPS].reverse().find((z) => z < zoomValue(get().zoom) - 0.001)
-        set({ zoom: prev ?? ZOOM_STEPS[0] })
+        const current = zoomValue(get().zoom)
+        const prev = [...ZOOM_STEPS].reverse().find((z) => z < current - 0.001)
+        set({ zoom: prev ?? clampZoom(current / 1.25) })
       },
     }
   })

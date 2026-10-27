@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { LibraryDrag } from '@/dnd/LibraryDrag'
 import { STICKER_CATALOG, STICKER_PACKS } from '@/data/stickers'
 import { LibraryGrid } from '@/ui/LibraryGrid'
 import { SearchInput } from '@/ui/SearchInput'
@@ -36,9 +37,15 @@ export function StickersPanel() {
       {stickers.length > 0 ? (
         <LibraryGrid>
           {stickers.map((s) => (
-            <PresetTile key={s.id} label={`Add ${s.emoji}`} size="sm" onPlace={() => place(s.preset)}>
-              <span className="text-[34px] leading-none">{s.emoji}</span>
-            </PresetTile>
+            <LibraryDrag
+              key={s.id}
+              id={`sticker-${s.id}`}
+              data={{ kind: 'preset', preset: s.preset, preview: { label: s.emoji, emoji: s.emoji } }}
+            >
+              <PresetTile label={`Add ${s.emoji}`} size="sm" onPlace={() => place(s.preset)}>
+                <span className="text-[34px] leading-none">{s.emoji}</span>
+              </PresetTile>
+            </LibraryDrag>
           ))}
         </LibraryGrid>
       ) : (

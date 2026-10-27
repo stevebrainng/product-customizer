@@ -26,5 +26,6 @@ export const TSHIRT: ProductSpec = {
   sizes: ['XS', 'S', 'M', 'L', 'XL', '2XL'],
 }
 
-export const DEFAULT_PRODUCTS: ProductSpec[] = [TSHIRT]
+/** Optional seed products for demos/tests — the app starts with an empty catalog. */
+export const DEFAULT_PRODUCTS: ProductSpec[] = []
 export const SIZE_PRESETS = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']

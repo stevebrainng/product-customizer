@@ -10,6 +10,9 @@ export const textNode = defineNode<TextNode>({
   defaults: () => ({
     type: 'text', text: 'Your text', fontSize: 48, fontFamily: DEFAULT_FONT_FAMILY,
     fontStyle: 'bold', fill: '#111111', align: 'center', width: 280,
+    lineHeight: 1.15, letterSpacing: 0, textDecoration: '',
+    stroke: '#111111', strokeWidth: 0,
+    shadowBlur: 0, shadowColor: '#000000', shadowOpacity: 0.45,
   }),
   placeAt: (n, c) => ({ ...n, x: c.x - (n.width ?? 0) / 2, y: c.y - n.fontSize / 2 }),
   render: (n, common) => (
@@ -22,7 +25,17 @@ export const textNode = defineNode<TextNode>({
       fill={n.fill}
       align={n.align}
       width={n.width}
-      lineHeight={1.15}
+      lineHeight={n.lineHeight ?? 1.15}
+      letterSpacing={n.letterSpacing ?? 0}
+      textDecoration={n.textDecoration || ''}
+      stroke={(n.strokeWidth ?? 0) > 0 ? (n.stroke || '#111111') : undefined}
+      strokeWidth={n.strokeWidth ?? 0}
+      fillAfterStrokeEnabled={(n.strokeWidth ?? 0) > 0}
+      shadowEnabled={(n.shadowBlur ?? 0) > 0}
+      shadowBlur={n.shadowBlur ?? 0}
+      shadowColor={n.shadowColor || '#000000'}
+      shadowOpacity={n.shadowOpacity ?? 0.45}
+      shadowOffsetY={3}
       wrap="word"
     />
   ),

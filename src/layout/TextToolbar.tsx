@@ -4,13 +4,16 @@ import {
   AlignRight,
   Bold,
   Italic,
+  Strikethrough,
   Type,
+  Underline,
 } from 'lucide-react'
 import { FONTS, FONT_SIZES, DEFAULT_FONT_FAMILY, findFont, fontLoadSpecs, cssFontFamily } from '@/config/fonts'
 import {
   selectActiveNodes,
   useEditor,
   useEditorRuntime,
+  type TextDecoration,
   type TextNode,
 } from '@/engine'
 import { IconButton } from '@/ui/Button'
@@ -24,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { ColorSwatch, EditBar, MiniNumber, OpacityControl } from './editControls'
 
 /**
  * Floating formatting bar for the selected text node.
@@ -70,13 +74,10 @@ export function TextToolbar() {
     ? String(node.fontSize)
     : String(Math.round(node.fontSize))
 
+  const decoration = node.textDecoration ?? ''
+
   return (
-    <div
-      role="toolbar"
-      aria-label="Text formatting"
-      className="pointer-events-auto absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-border bg-card/95 p-1.5 shadow-md backdrop-blur"
-      onMouseDown={(e) => e.preventDefault()}
-    >
+    <EditBar label="Text formatting">
       <IconButton
         icon={Type}
         label={editing === node.id ? 'Editing…' : 'Edit text'}
@@ -85,7 +86,7 @@ export function TextToolbar() {
       />
 
       <Select value={current?.family ?? DEFAULT_FONT_FAMILY} onValueChange={applyFont}>
-        <SelectTrigger className="w-[148px]" aria-label="Font">
+        <SelectTrigger className="w-[188px]" aria-label="Font">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -146,6 +147,21 @@ export function TextToolbar() {
       <ToggleGroup
         variant="outline"
         spacing={0}
+        value={decoration ? [decoration] : []}
+        onValueChange={(next) => patch({ textDecoration: (next[0] as TextDecoration | undefined) ?? '' })}
+        aria-label="Text decoration"
+      >
+        <ToggleGroupItem value="underline" aria-label="Underline">
+          <Underline />
+        </ToggleGroupItem>
+        <ToggleGroupItem value="line-through" aria-label="Strikethrough">
+          <Strikethrough />
+        </ToggleGroupItem>
+      </ToggleGroup>
+
+      <ToggleGroup
+        variant="outline"
+        spacing={0}
         value={[node.align]}
         onValueChange={(next) => {
           const align = next[0] as TextNode['align'] | undefined
@@ -164,13 +180,41 @@ export function TextToolbar() {
         </ToggleGroupItem>
       </ToggleGroup>
 
-      <input
-        type="color"
-        aria-label="Text color"
-        className="size-9 cursor-pointer rounded-lg border border-input bg-background p-1"
-        value={/^#[0-9a-fA-F]{6}$/.test(node.fill) ? node.fill : '#111111'}
-        onChange={(e) => patch({ fill: e.target.value })}
+      <ColorSwatch label="Text color" value={node.fill} onChange={(fill) => patch({ fill })} />
+      <MiniNumber
+        label="Spacing"
+        value={node.letterSpacing ?? 0}
+        min={-20}
+        max={80}
+        onChange={(letterSpacing) => patch({ letterSpacing })}
       />
-    </div>
+      <MiniNumber
+        label="Leading"
+        value={node.lineHeight ?? 1.15}
+        min={0.6}
+        max={3}
+        step={0.05}
+        wide
+        onChange={(lineHeight) => patch({ lineHeight })}
+      />
+      <Separator orientation="vertical" className="mx-0.5! h-7" />
+      <ColorSwatch label="Stroke" value={node.stroke || '#111111'} onChange={(stroke) => patch({ stroke })} />
+      <MiniNumber
+        label="Stroke"
+        value={node.strokeWidth ?? 0}
+        min={0}
+        max={20}
+        onChange={(strokeWidth) => patch({ strokeWidth })}
+      />
+      <ColorSwatch label="Shadow" value={node.shadowColor || '#000000'} onChange={(shadowColor) => patch({ shadowColor })} />
+      <MiniNumber
+        label="Shadow"
+        value={node.shadowBlur ?? 0}
+        min={0}
+        max={40}
+        onChange={(shadowBlur) => patch({ shadowBlur })}
+      />
+      <OpacityControl value={node.opacity} onChange={(opacity) => patch({ opacity })} />
+    </EditBar>
   )
 }

@@ -39,7 +39,7 @@ function TextEditorField({ node, scale }: { node: TextNode; scale: number }) {
     if (!el) return
     el.style.height = '0'
     el.style.height = `${el.scrollHeight}px`
-  }, [value, scale, node.fontSize, node.fontFamily, node.fontStyle, node.width])
+  }, [value, scale, node.fontSize, node.fontFamily, node.fontStyle, node.width, node.lineHeight, node.letterSpacing])
 
   const finish = () => {
     if (state.current.done) return
@@ -86,7 +86,13 @@ function TextEditorField({ node, scale }: { node: TextNode; scale: number }) {
         fontFamily: cssFontFamily(node.fontFamily),
         fontWeight: bold ? 700 : 400,
         fontStyle: italic ? 'italic' : 'normal',
-        lineHeight: 1.15,
+        lineHeight: node.lineHeight ?? 1.15,
+        letterSpacing: (node.letterSpacing ?? 0) * scale,
+        textDecoration: node.textDecoration || undefined,
+        WebkitTextStroke: (node.strokeWidth ?? 0) > 0 ? `${(node.strokeWidth ?? 0) * scale}px ${node.stroke || '#111111'}` : undefined,
+        textShadow: (node.shadowBlur ?? 0) > 0
+          ? `0 ${3 * scale}px ${(node.shadowBlur ?? 0) * scale}px ${node.shadowColor || '#000000'}`
+          : undefined,
         color: node.fill,
         textAlign: node.align,
         opacity: node.opacity,

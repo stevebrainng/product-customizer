@@ -7,7 +7,7 @@ import { EditorRuntime } from '../runtime/EditorRuntime'
 interface Engine { store: EditorStore; runtime: EditorRuntime }
 const EngineContext = createContext<Engine | null>(null)
 
-export function EditorProvider({ products, children }: { products: ProductSpec[]; children: ReactNode }) {
+export function EditorProvider({ products = [], children }: { products?: ProductSpec[]; children: ReactNode }) {
   const ref = useRef<Engine | null>(null)
   if (!ref.current) {
     const store = createEditorStore(products)

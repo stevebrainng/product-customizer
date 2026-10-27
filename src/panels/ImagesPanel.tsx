@@ -1,3 +1,4 @@
+import { LibraryDrag } from '@/dnd/LibraryDrag'
 import { IMAGE_TOPICS, useImageLibrary } from '@/media'
 import { Button } from '@/ui/Button'
 import { Chip } from '@/ui/Chip'
@@ -63,7 +64,13 @@ export function ImagesPanel() {
         <>
           <LibraryGrid>
             {lib.photos.map((photo) => (
-              <PhotoTile key={photo.id} photo={photo} onPlace={() => place(photo)} />
+              <LibraryDrag
+                key={photo.id}
+                id={`photo-${photo.id}`}
+                data={{ kind: 'photo', photo, preview: { label: photo.photographer.name, imageUrl: photo.thumbUrl } }}
+              >
+                <PhotoTile photo={photo} onPlace={() => place(photo)} />
+              </LibraryDrag>
             ))}
           </LibraryGrid>
           <p className="text-center text-[11px] text-muted-foreground">
