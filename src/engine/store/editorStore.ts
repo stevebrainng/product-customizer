@@ -72,6 +72,17 @@ export interface EditorState {
   setZoom: (zoom: Zoom) => void
   zoomIn: () => void
   zoomOut: () => void
+
+  /**
+   * Replace the active document and assets in one step (checkout draft restore).
+   * Resets undo history to the loaded document; does not touch the product catalog.
+   */
+  loadSnapshot: (snapshot: {
+    doc: DesignDoc
+    assets: Record<string, Asset>
+    colorId?: string | null
+    side?: SideId
+  }) => void
 }
 
 export const selectProduct = (s: EditorState): ProductSpec | undefined =>
@@ -329,6 +340,21 @@ export const createEditorStore = (initialProducts: ProductSpec[] = []) => {
         const prev = [...ZOOM_STEPS].reverse().find((z) => z < current - 0.001)
         set({ zoom: prev ?? clampZoom(current / 1.25) })
       },
+
+      loadSnapshot: ({ doc, assets, colorId, side }) =>
+        set((s) => ({
+          history: createHistory(doc),
+          assets,
+          variant: {
+            ...s.variant,
+            colorId: colorId !== undefined ? colorId : s.variant.colorId,
+          },
+          activeSide: side ?? s.activeSide,
+          selection: [],
+          editingTextId: null,
+          guides: NO_GUIDES,
+          editingPrintArea: false,
+        })),
     }
   })
 }
