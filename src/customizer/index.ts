@@ -6,6 +6,7 @@ export {
   loadDraft,
   saveCartLine,
   listCartLines,
+  loadPreview,
   draftIdFromUrl,
   readLastDraftId,
   writeLastDraftId,

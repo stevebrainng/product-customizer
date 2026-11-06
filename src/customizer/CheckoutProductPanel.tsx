@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Check, ChevronDown, Droplets, HelpCircle } from 'lucide-react'
-import { selectProduct, useEditor } from '@/engine'
+import { ChevronDown, Droplets, HelpCircle } from 'lucide-react'
+import { selectProduct, useEditor, useEditorStore } from '@/engine'
 import { Button } from '@/ui/Button'
 import { PanelSection } from '@/ui/PanelSection'
 import { Textarea } from '@/components/ui/textarea'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
+import { applyColorway } from '@/shop/catalog'
+import { SizeQuantities } from '@/ui/SizeQuantities'
 import { useCustomizer } from './CustomizerProvider'
 import { formatMoney, quote, totalQuantity } from './quote'
 import type { CheckoutProduct, DesignStyle } from './types'
@@ -30,7 +32,7 @@ export function CheckoutProductPanel({
 }) {
   const engineProduct = useEditor(selectProduct)
   const colorId = useEditor((s) => s.variant.colorId)
-  const setColor = useEditor((s) => s.setColor)
+  const store = useEditorStore()
   const selection = useCustomizer((s) => s.selection)
   const setSelection = useCustomizer((s) => s.setSelection)
   const setQuantity = useCustomizer((s) => s.setQuantity)
@@ -103,7 +105,7 @@ export function CheckoutProductPanel({
       </PanelSection>
 
       <PanelSection title="Product Color">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {colors.map((c) => {
             const active = c.id === colorId
             return (
@@ -114,57 +116,28 @@ export function CheckoutProductPanel({
                 aria-label={c.name}
                 aria-pressed={active}
                 onClick={() => {
-                  setColor(c.id)
-                  setSelection({ colorId: c.id })
+                  const id = applyColorway(store.getState(), product, c.id)
+                  setSelection({ colorId: id })
                 }}
                 className={cn(
-                  'relative size-8 rounded-full border border-black/15 outline-none transition-shadow',
-                  'focus-visible:ring-2 focus-visible:ring-primary/50',
-                  active && 'ring-2 ring-zinc-950 ring-offset-2 ring-offset-canvas',
+                  'size-[18px] rounded-full border border-black/20 outline-none',
+                  'focus-visible:ring-2 focus-visible:ring-primary/40',
+                  active && 'ring-2 ring-[#c6ef2e] ring-offset-2 ring-offset-canvas',
                 )}
                 style={{ backgroundColor: c.hex }}
-              >
-                {active && (
-                  <Check
-                    className={cn(
-                      'absolute inset-0 m-auto size-4',
-                      c.hex.toLowerCase() === '#ffffff' || c.hex.toLowerCase() === '#fff'
-                        ? 'text-zinc-900'
-                        : 'text-white',
-                    )}
-                    strokeWidth={3}
-                  />
-                )}
-              </button>
+              />
             )
           })}
         </div>
       </PanelSection>
 
       <PanelSection title="Quantity">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {sizes.map((size) => (
-            <label
-              key={size}
-              className="flex items-center justify-between gap-2 rounded-xl border border-line bg-white px-2.5 py-2"
-            >
-              <span className="text-[13px] font-medium">{size}</span>
-              <input
-                type="number"
-                min={0}
-                step={1}
-                inputMode="numeric"
-                aria-label={`Quantity ${size}`}
-                className="h-8 w-14 rounded-lg border border-input bg-background px-2 text-center text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                value={selection.quantities[size] ?? 0}
-                onChange={(e) => {
-                  const n = e.currentTarget.valueAsNumber
-                  setQuantity(size, Number.isFinite(n) ? n : 0)
-                }}
-              />
-            </label>
-          ))}
-        </div>
+        <SizeQuantities
+          layout="compact"
+          sizes={sizes}
+          quantities={selection.quantities}
+          onChange={(size, n) => setQuantity(size, n)}
+        />
       </PanelSection>
 
       <PanelSection title="Special Notes For Delivery">

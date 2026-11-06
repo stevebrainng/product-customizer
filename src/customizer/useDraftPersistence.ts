@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from 'react'
-import type { SideId } from '@/engine'
 import { useEditorStore, useEditorRuntime } from '@/engine'
 import {
   buildDraft,
@@ -9,9 +8,13 @@ import {
   readLastDraftId,
   saveCartLine,
   saveDraft,
+  savePreview,
   storedToAssetMap,
   writeLastDraftId,
 } from './persist'
+import { applyColorway } from '@/shop/catalog'
+import { previewSide, renderCustomizedMockup } from '@/shop/mockupPreview'
+import { colorFromSearch, quantitiesFromSearch } from '@/shop/order'
 import { useCustomizerStore } from './CustomizerProvider'
 import { quote } from './quote'
 import type { CheckoutProduct, CustomizationDraft, CustomizationLine, ProductCustomizerProps } from './types'
@@ -78,17 +81,27 @@ export function useDraftPersistence(
     void (async () => {
       try {
         const existing = await loadDraft(id)
+        const urlColor = colorFromSearch()
+        const urlQty = quantitiesFromSearch()
         if (existing && existing.productId === product.id) {
           const assets = await storedToAssetMap(existing.assets)
+          const selection = {
+            ...existing.selection,
+            ...(urlColor ? { colorId: urlColor } : {}),
+            ...(urlQty ? { quantities: urlQty } : {}),
+          }
           editor.getState().loadSnapshot({
             doc: existing.doc,
             assets,
-            colorId: existing.selection.colorId,
+            colorId: selection.colorId,
             side: existing.activeSide,
           })
-          chrome.getState().setSelection(existing.selection)
-        } else if (product.spec.colors[0]) {
-          editor.getState().setColor(product.spec.colors[0].id)
+          chrome.getState().setSelection(selection)
+          applyColorway(editor.getState(), product, selection.colorId)
+        } else {
+          const selection = chrome.getState().selection
+          applyColorway(editor.getState(), product, urlColor ?? selection.colorId)
+          if (urlQty) chrome.getState().setSelection({ ...selection, quantities: urlQty, ...(urlColor ? { colorId: urlColor } : {}) })
         }
         const cart = await listCartLines()
         chrome.getState().setCartCount(cart.length)
@@ -114,21 +127,14 @@ export function useDraftPersistence(
     const draft = await flush()
     const selection = chrome.getState().selection
     const q = quote(product, selection)
-    const previews: CustomizationLine['previews'] = {}
-    const state = editor.getState()
-    const prevSide = state.activeSide
-    for (const side of ['front', 'back'] as SideId[]) {
-      if (state.history.present.sides[side].length === 0) continue
-      try {
-        state.setActiveSide(side)
-        // Allow Konva to swap the active side before rasterizing.
-        await new Promise((r) => requestAnimationFrame(() => r(undefined)))
-        previews[side] = runtime.toDataURL({ widthPx: 480, mimeType: 'image/png' })
-      } catch {
-        /* stage may be empty / unmounted */
-      }
+    const side = previewSide(editor)
+    const previous = editor.getState().activeSide
+    try {
+      const image = await renderCustomizedMockup(editor, runtime, side)
+      await savePreview(draft.id, image)
+    } finally {
+      if (editor.getState().activeSide !== previous) editor.getState().setActiveSide(previous)
     }
-    state.setActiveSide(prevSide)
 
     return {
       customizationId: draft.id,
@@ -136,7 +142,6 @@ export function useDraftPersistence(
       productName: product.name,
       selection,
       quote: q,
-      previews: Object.keys(previews).length ? previews : undefined,
     }
   }, [chrome, editor, flush, product, runtime])
 
