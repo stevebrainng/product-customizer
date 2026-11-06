@@ -19,9 +19,7 @@ export function quote(product: CheckoutProduct, selection: CheckoutSelection): Q
 }
 
 export function formatMoney(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount)
-  } catch {
-    return `${currency} ${Math.round(amount)}`
-  }
+  const rounded = Math.round(amount * 100) / 100
+  const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2)
+  return `${currency} ${text}`
 }

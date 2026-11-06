@@ -2,9 +2,10 @@ import type { Asset, DesignDoc, SideId } from '@/engine'
 import type { CheckoutSelection, CustomizationDraft, CustomizationLine, StoredAsset } from './types'
 
 const DB_NAME = 'product-customizer'
-const DB_VERSION = 1
+const DB_VERSION = 3
 const DRAFTS = 'drafts'
 const CART = 'cart'
+const PREVIEWS = 'previews'
 export const LAST_DRAFT_KEY = 'customizer:lastDraftId'
 
 function openDb(): Promise<IDBDatabase> {
@@ -14,9 +15,11 @@ function openDb(): Promise<IDBDatabase> {
       const db = req.result
       if (!db.objectStoreNames.contains(DRAFTS)) db.createObjectStore(DRAFTS, { keyPath: 'id' })
       if (!db.objectStoreNames.contains(CART)) db.createObjectStore(CART, { keyPath: 'customizationId' })
+      if (!db.objectStoreNames.contains(PREVIEWS)) db.createObjectStore(PREVIEWS, { keyPath: 'id' })
     }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error ?? new Error('Failed to open IndexedDB'))
+    req.onblocked = () => reject(new Error('Close other tabs using the customizer, then try again'))
   })
 }
 
@@ -107,6 +110,26 @@ export async function saveCartLine(line: CustomizationLine): Promise<void> {
   const db = await openDb()
   try {
     await idbReq(db.transaction(CART, 'readwrite').objectStore(CART).put(line))
+  } finally {
+    db.close()
+  }
+}
+
+export async function savePreview(id: string, image: Blob): Promise<void> {
+  const db = await openDb()
+  try {
+    await idbReq(db.transaction(PREVIEWS, 'readwrite').objectStore(PREVIEWS).put({ id, image }))
+  } finally {
+    db.close()
+  }
+}
+
+export async function loadPreview(id: string): Promise<Blob | null> {
+  const db = await openDb()
+  try {
+    const row = await idbReq(db.transaction(PREVIEWS, 'readonly').objectStore(PREVIEWS).get(id))
+    const image = (row as { image?: Blob } | undefined)?.image
+    return image ?? null
   } finally {
     db.close()
   }

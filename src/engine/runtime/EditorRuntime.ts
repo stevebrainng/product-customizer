@@ -58,6 +58,40 @@ export class EditorRuntime {
     }
   }
 
+  /** Full world of the design layer only. The garment photo is not on this stage. */
+  designLayerDataURL(pixelRatio = 2): string {
+    const stage = this.stage
+    if (!stage) throw new Error('Stage is not mounted')
+    const state = this.store.getState()
+    const product = selectProduct(state)
+    if (!product) throw new Error('No product selected')
+
+    const prev = { w: stage.width(), h: stage.height(), sx: stage.scaleX(), sy: stage.scaleY() }
+    const overlay = stage.findOne('#overlay')
+    const overlayWasVisible = overlay?.visible() ?? false
+
+    overlay?.visible(false)
+    stage.size(product.world)
+    stage.scale({ x: 1, y: 1 })
+    recacheFilteredImages(stage, pixelRatio)
+    try {
+      return stage.toDataURL({
+        x: 0,
+        y: 0,
+        width: product.world.width,
+        height: product.world.height,
+        pixelRatio,
+        mimeType: 'image/png',
+      })
+    } finally {
+      recacheFilteredImages(stage, SCREEN_CACHE_RATIO)
+      stage.size({ width: prev.w, height: prev.h })
+      stage.scale({ x: prev.sx, y: prev.sy })
+      overlay?.visible(overlayWasVisible)
+      stage.batchDraw()
+    }
+  }
+
   async toBlob(options?: ExportOptions): Promise<Blob> {
     return (await fetch(this.toDataURL(options))).blob()
   }

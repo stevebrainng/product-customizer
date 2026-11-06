@@ -26,8 +26,8 @@ export function CustomizerTopBar({
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-white px-3 sm:px-4">
       <div className="flex min-w-0 items-center gap-2">
-        <a href="/" className="truncate text-[15px] font-semibold tracking-tight text-ink">
-          merchlist
+        <a href="/product" className="truncate text-[15px] font-semibold tracking-tight text-ink">
+          OnlineStore
         </a>
         <Button type="button" size="sm" variant="outline" disabled={busy || saving} onClick={onSave}>
           {saving ? 'Saving…' : 'Save'}

@@ -46,7 +46,7 @@ function CustomizerBody(props: ProductCustomizerProps) {
 
 /** Host entry: mounts the editor engine with a fixed catalog product and checkout chrome. */
 export function ProductCustomizer(props: ProductCustomizerProps) {
-  const selection = defaultSelection(props.product)
+  const selection = props.initialSelection ?? defaultSelection(props.product)
 
   return (
     <EditorProvider products={[props.product.spec]}>
