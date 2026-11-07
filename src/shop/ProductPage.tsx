@@ -90,11 +90,11 @@ export function ProductPage() {
                 </button>
               ))}
             </div>
-            <div className="relative grid min-h-[420px] place-items-center rounded-xl bg-[#f6f6f6]">
+            <div className="relative grid min-h-105 place-items-center rounded-xl bg-[#f6f6f6]">
               <span className="absolute top-4 left-4 rounded bg-emerald-600 px-2 py-1 text-[11px] font-semibold tracking-wide text-white">
                 BEST SELLER
               </span>
-              <img src={activePhoto.src} alt={`${HOODIE_PRODUCT.name}, ${color.name}, ${activePhoto.label}`} className="max-h-[560px] w-full object-contain" />
+              <img src={activePhoto.src} alt={`${HOODIE_PRODUCT.name}, ${color.name}, ${activePhoto.label}`} className="max-h-140 w-full object-contain" />
             </div>
           </div>
         </section>
@@ -138,7 +138,7 @@ export function ProductPage() {
                       setSide('front')
                     }}
                     className={cn(
-                      'size-[18px] rounded-full border border-black/20',
+                      'size-4.5 rounded-full border border-black/20',
                       active && 'ring-2 ring-[#c6ef2e] ring-offset-2',
                     )}
                     style={{ backgroundColor: swatch.hex }}
