@@ -36,7 +36,7 @@ export function SideThumbs() {
             aria-pressed={selected}
             onClick={() => setSide(side.id)}
             className={cn(
-              'w-[88px] overflow-hidden rounded-xl border bg-white text-left shadow-sm transition-shadow',
+              'w-22 overflow-hidden rounded-xl border bg-white text-left shadow-sm transition-shadow',
               selected ? 'border-zinc-950 ring-2 ring-zinc-950' : 'border-line hover:border-zinc-400',
             )}
           >

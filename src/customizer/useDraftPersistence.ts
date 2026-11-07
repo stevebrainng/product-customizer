@@ -72,7 +72,7 @@ export function useDraftPersistence(
     const id = resolveDraftId(callbacks.draftId)
     chrome.getState().setDraftId(id)
     writeLastDraftId(id)
-    if (typeof history !== 'undefined' && !draftIdFromUrl()) {
+    if (!callbacks.draftId && typeof history !== 'undefined' && !draftIdFromUrl()) {
       const url = new URL(location.href)
       url.searchParams.set('draft', id)
       history.replaceState(null, '', url.pathname + url.search)

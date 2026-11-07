@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { Check, ChevronDown, ShoppingCart, Star } from 'lucide-react'
 import { formatMoney, totalQuantity } from '@/customizer'
 import type { CheckoutSelection } from '@/customizer'
@@ -6,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils'
 import { SizeQuantities } from '@/ui/SizeQuantities'
 import { HOODIE_PRODUCT, colorway } from './catalog'
-import { go, qtySearch, readShopOrder, saveShopOrder, selectionFromOrder } from './order'
+import { qtySearch, readShopOrder, saveShopOrder, selectionFromOrder } from './order'
 import { ShopHeader } from './ShopHeader'
 
 const HIGHLIGHTS = [
@@ -16,6 +17,7 @@ const HIGHLIGHTS = [
 ]
 
 export function ProductPage() {
+  const navigate = useNavigate()
   const stored = useMemo(() => selectionFromOrder(readShopOrder()), [])
   const [selection, setSelection] = useState<CheckoutSelection>(stored)
   const [side, setSide] = useState<'front' | 'back'>('front')
@@ -42,8 +44,10 @@ export function ProductPage() {
 
   const customize = () => {
     saveSelection(false)
-    const q = encodeURIComponent(qtySearch(selection.quantities))
-    go(`/customize?color=${color.id}&qty=${q}`)
+    void navigate({
+      to: '/customize',
+      search: { color: color.id, qty: qtySearch(selection.quantities) },
+    })
   }
 
   const checkout = () => {
@@ -59,7 +63,7 @@ export function ProductPage() {
       customized: false,
       style: null,
     })
-    go('/checkout')
+    void navigate({ to: '/checkout' })
   }
 
   return (
@@ -86,11 +90,11 @@ export function ProductPage() {
                 </button>
               ))}
             </div>
-            <div className="relative grid min-h-[420px] place-items-center rounded-xl bg-[#f6f6f6]">
+            <div className="relative grid min-h-105 place-items-center rounded-xl bg-[#f6f6f6]">
               <span className="absolute top-4 left-4 rounded bg-emerald-600 px-2 py-1 text-[11px] font-semibold tracking-wide text-white">
                 BEST SELLER
               </span>
-              <img src={activePhoto.src} alt={`${HOODIE_PRODUCT.name}, ${color.name}, ${activePhoto.label}`} className="max-h-[560px] w-full object-contain" />
+              <img src={activePhoto.src} alt={`${HOODIE_PRODUCT.name}, ${color.name}, ${activePhoto.label}`} className="max-h-140 w-full object-contain" />
             </div>
           </div>
         </section>
@@ -134,7 +138,7 @@ export function ProductPage() {
                       setSide('front')
                     }}
                     className={cn(
-                      'size-[18px] rounded-full border border-black/20',
+                      'size-4.5 rounded-full border border-black/20',
                       active && 'ring-2 ring-[#c6ef2e] ring-offset-2',
                     )}
                     style={{ backgroundColor: swatch.hex }}

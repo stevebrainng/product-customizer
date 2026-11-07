@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { formatMoney, listCartLines, loadPreview, totalQuantity } from '@/customizer'
 import type { DesignStyle } from '@/customizer'
 import { HOODIE_PRODUCT, colorway } from './catalog'
@@ -143,9 +144,9 @@ export function CheckoutPage() {
                 {order.customized ? `, ${styleLabel(order.style)}` : ', no custom design'}
                 . A confirmation would go to {delivery.email}.
               </p>
-              <a href="/product" className="mt-5 inline-flex h-11 items-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white">
+              <Link to="/" className="mt-5 inline-flex h-11 items-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white">
                 Back to product
-              </a>
+              </Link>
             </section>
           ) : (
             <>
@@ -205,15 +206,15 @@ export function CheckoutPage() {
         <aside className="h-fit rounded-2xl bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Order summary</h2>
-            <a href="/product" className="text-sm text-zinc-500 underline-offset-2 hover:underline">Edit cart</a>
+            <Link to="/" className="text-sm text-zinc-500 underline-offset-2 hover:underline">Edit cart</Link>
           </div>
           {!ready && <p className="mt-6 text-sm text-zinc-500">Loading your order…</p>}
           {ready && !summary && (
             <div className="mt-6 space-y-3 text-sm text-zinc-600">
               <p>Nothing to check out yet. Pick a color and at least one size.</p>
-              <a href="/product" className="inline-flex h-10 items-center rounded-lg bg-zinc-950 px-3 text-sm font-semibold text-white">
+              <Link to="/" className="inline-flex h-10 items-center rounded-lg bg-zinc-950 px-3 text-sm font-semibold text-white">
                 Go to product
-              </a>
+              </Link>
             </div>
           )}
           {summary && order && (
@@ -259,9 +260,13 @@ export function CheckoutPage() {
                 </div>
               </dl>
               {!order.customized && (
-                <a href={`/customize?color=${order.colorId}&qty=${encodeURIComponent(qtySearch(order.quantities))}`} className="mt-4 inline-block text-sm text-zinc-500 underline-offset-2 hover:underline">
+                <Link
+                  to="/customize"
+                  search={{ color: order.colorId, qty: qtySearch(order.quantities) }}
+                  className="mt-4 inline-block text-sm text-zinc-500 underline-offset-2 hover:underline"
+                >
                   Add a design instead
-                </a>
+                </Link>
               )}
             </>
           )}
