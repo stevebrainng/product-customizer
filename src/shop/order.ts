@@ -59,8 +59,7 @@ export function selectionFromOrder(order: ShopOrder | null): CheckoutSelection {
 }
 
 /** `S:1,M:0` query from the product page. Missing sizes stay 0. */
-export function quantitiesFromSearch(search = location.search): Record<string, number> | null {
-  const raw = new URLSearchParams(search).get('qty')
+export function parseQtyParam(raw: string | null | undefined): Record<string, number> | null {
   if (!raw) return null
   const quantities = emptyQuantities(HOODIE_PRODUCT)
   for (const part of raw.split(',')) {
@@ -68,6 +67,10 @@ export function quantitiesFromSearch(search = location.search): Record<string, n
     if (size in quantities) quantities[size] = Math.max(0, Math.floor(Number(value) || 0))
   }
   return quantities
+}
+
+export function quantitiesFromSearch(search = location.search): Record<string, number> | null {
+  return parseQtyParam(new URLSearchParams(search).get('qty'))
 }
 
 export function colorFromSearch(search = location.search): string | null {
@@ -78,8 +81,4 @@ export function colorFromSearch(search = location.search): string | null {
 
 export function qtySearch(quantities: Record<string, number>): string {
   return Object.entries(quantities).map(([size, qty]) => `${size}:${qty}`).join(',')
-}
-
-export function go(path: string) {
-  location.assign(path)
 }

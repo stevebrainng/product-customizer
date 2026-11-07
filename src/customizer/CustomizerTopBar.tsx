@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { ShoppingCart } from 'lucide-react'
 import { Button } from '@/ui/Button'
 import { cn } from '@/lib/utils'
@@ -26,9 +27,9 @@ export function CustomizerTopBar({
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-white px-3 sm:px-4">
       <div className="flex min-w-0 items-center gap-2">
-        <a href="/product" className="truncate text-[15px] font-semibold tracking-tight text-ink">
+        <Link to="/" activeOptions={{ exact: true }} className="truncate text-[15px] font-semibold tracking-tight text-ink">
           OnlineStore
-        </a>
+        </Link>
         <Button type="button" size="sm" variant="outline" disabled={busy || saving} onClick={onSave}>
           {saving ? 'Saving…' : 'Save'}
         </Button>

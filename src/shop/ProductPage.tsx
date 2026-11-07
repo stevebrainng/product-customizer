@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { Check, ChevronDown, ShoppingCart, Star } from 'lucide-react'
 import { formatMoney, totalQuantity } from '@/customizer'
 import type { CheckoutSelection } from '@/customizer'
@@ -6,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { cn } from '@/lib/utils'
 import { SizeQuantities } from '@/ui/SizeQuantities'
 import { HOODIE_PRODUCT, colorway } from './catalog'
-import { go, qtySearch, readShopOrder, saveShopOrder, selectionFromOrder } from './order'
+import { qtySearch, readShopOrder, saveShopOrder, selectionFromOrder } from './order'
 import { ShopHeader } from './ShopHeader'
 
 const HIGHLIGHTS = [
@@ -16,6 +17,7 @@ const HIGHLIGHTS = [
 ]
 
 export function ProductPage() {
+  const navigate = useNavigate()
   const stored = useMemo(() => selectionFromOrder(readShopOrder()), [])
   const [selection, setSelection] = useState<CheckoutSelection>(stored)
   const [side, setSide] = useState<'front' | 'back'>('front')
@@ -42,8 +44,10 @@ export function ProductPage() {
 
   const customize = () => {
     saveSelection(false)
-    const q = encodeURIComponent(qtySearch(selection.quantities))
-    go(`/customize?color=${color.id}&qty=${q}`)
+    void navigate({
+      to: '/customize',
+      search: { color: color.id, qty: qtySearch(selection.quantities) },
+    })
   }
 
   const checkout = () => {
@@ -59,7 +63,7 @@ export function ProductPage() {
       customized: false,
       style: null,
     })
-    go('/checkout')
+    void navigate({ to: '/checkout' })
   }
 
   return (

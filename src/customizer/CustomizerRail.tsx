@@ -19,7 +19,7 @@ export function CustomizerRail() {
       className={cn(
         'flex shrink-0 bg-zinc-950 text-zinc-100',
         'max-md:order-last max-md:w-full max-md:overflow-x-auto max-md:border-t max-md:border-zinc-800 max-md:px-1 max-md:py-1',
-        'md:w-[76px] md:flex-col md:border-r md:border-zinc-800 md:py-2',
+        'md:w-19 md:flex-col md:border-r md:border-zinc-800 md:py-2',
       )}
     >
       <ul className="flex shrink-0 flex-row items-center gap-1 md:flex-col">
@@ -33,7 +33,7 @@ export function CustomizerRail() {
                 aria-pressed={isActive}
                 onClick={() => toggle(item.id)}
                 className={cn(
-                  'flex h-[58px] w-[64px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl text-[11px] transition-colors',
+                  'flex h-14.5 w-16 shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl text-[11px] transition-colors',
                   'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-white/30',
                   isActive ? 'bg-white text-zinc-950' : 'text-zinc-300 hover:bg-white/10 hover:text-white',
                 )}
